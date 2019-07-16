@@ -8,7 +8,8 @@ This repo has my public docker files.
 * Create a config like in `configs/rl.txt` and use it as `dockerx -c CONFIG CMD`.
     * If `CMD` is one word and present in `CONFIG`, then equivalent command is run.
     * Else, all of `CMD` is run with the container name in `CONFIG`.
-    * Make sure that `CONFIG` has only one section, which corresponds to the container name.
+    * Make sure that `CONFIG` has only two sections, just like in `configs/rl.txt`.
+    * First section is the name of the docker container.
 
 ### [ashishgaurav13/rl](https://cloud.docker.com/repository/docker/ashishgaurav13/rl)
 

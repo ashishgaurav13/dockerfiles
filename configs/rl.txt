@@ -1,2 +1,5 @@
 [ashishgaurav13/rl]
 test = echo "hi"
+
+[volumes]
+logs = $(pwd)/logs:/logs

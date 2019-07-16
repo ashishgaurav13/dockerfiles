@@ -10,14 +10,11 @@ def binary_exists(x):
 if not os.path.exists(os.path.expanduser("~")+"/.dockerxrc"):
     config = configparser.ConfigParser()
     config['args'] = {}
-    config['volumes'] = {}
     config['defaults'] = {}
     # Runs with -gpu
     config['args']['gpu'] = 'yes'
     # Runs with -x
     config['args']['x'] = 'yes'
-    # Runs with -v $(pwd)/logs:/logs
-    config['volumes']['log'] = 'yes'
     # Default options
     config['defaults']['cmds'] = ''
     # Write
@@ -47,7 +44,7 @@ if config['defaults']['cmds'] != '' or args.c != '':
         config2.read(args.c)
     else:
         config2.read(config['defaults']['cmds'])
-    assert(len(config2.sections()) == 1)
+    assert(len(config2.sections()) == 2)
 
 if args.check:
     print('docker ... %s' % binary_exists('docker'))
@@ -55,7 +52,6 @@ if args.check:
     print('\n\nConfig (%s):' % config_file)
     print('GPU ... %s' % config['args']['gpu'])
     print('X ... %s' % config['args']['x'])
-    print('Volume mount logs dir ... %s' % config['volumes']['log'])
     print('Default container cmds ... %s' % config['defaults']['cmds'])
     exit(0)
 
@@ -71,19 +67,22 @@ if args.x:
 else:
     CMD += ["-ti", "--rm"]
 
-if config['volumes']['log'] == 'yes':
-    CMD += ["-v", "$(pwd)/logs:/logs"]
-
 if config2:
-    cname = config2.sections()[0]
+    cname, vname = config2.sections()
+    assert(vname == 'volumes')
     if args.show:
         print('Container name: %s' % cname)
         print('Shell CMD: %s' % ' '.join(CMD))
         print('\n\nAvailable commands:')
         for key in config2[cname].keys():
             print('%s: %s' % (key, config2[cname][key]))
+        print('\n\nVolumes:')
+        for key in config2[vname].keys():
+            print('%s' % config2[vname][key])
     else:
-        CMD += config2.sections()
+        for key in config2[vname].keys():
+            CMD += ["-v", config2[vname][key]]
+        CMD += [cname]
         if len(unknown) == 1 and unknown[0] in config2[cname].keys():
             CMD += [config2[cname][unknown[0]]]
         else:
