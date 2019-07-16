@@ -37,7 +37,7 @@ RUN ${PIP} --no-cache-dir install --upgrade \
 
 RUN ln -s $(which ${PYTHON}) /usr/local/bin/python 
 
-ARG TF_PACKAGE=tensorflow
+ARG TF_PACKAGE=tensorflow-gpu
 ARG TF_PACKAGE_VERSION=
 RUN ${PIP} install ${TF_PACKAGE}${TF_PACKAGE_VERSION:+==${TF_PACKAGE_VERSION}}
 
