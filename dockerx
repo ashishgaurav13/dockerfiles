@@ -77,11 +77,19 @@ if config2:
         for key in config2[cname].keys():
             print('%s: %s' % (key, config2[cname][key]))
         print('\n\nVolumes:')
+        prefix = ''
+        if 'prefix' in config2[vname].keys():
+            prefix = config2[vname]['prefix']
         for key in config2[vname].keys():
-            print('%s' % config2[vname][key])
+            if key != 'prefix':
+                print('%s' % (prefix+config2[vname][key]))
     else:
+        prefix = ''
+        if 'prefix' in config2[vname].keys():
+            prefix = config2[vname]['prefix']
         for key in config2[vname].keys():
-            CMD += ["-v", config2[vname][key]]
+            if key != 'prefix':
+                CMD += ["-v", (prefix+config2[vname][key])]
         CMD += [cname]
         if len(unknown) == 1 and unknown[0] in config2[cname].keys():
             CMD += [config2[cname][unknown[0]]]
