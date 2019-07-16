@@ -1,5 +1,15 @@
 This repo has my public docker files.
 
+#### Notes
+
+* For GPU work, install nvidia-docker for your Linux distribution
+* It may be convenient for you to use `dockerx`. Place it in your bin?
+* Run `dockerx -check` to see defaults and what's installed.
+* Create a config like in `configs/rl.txt` and use it as `dockerx -c CONFIG CMD`.
+    * If `CMD` is one word and present in `CONFIG`, then equivalent command is run.
+    * Else, all of `CMD` is run with the container name in `CONFIG`.
+    * Make sure that `CONFIG` has only one section, which corresponds to the container name.
+
 ### [ashishgaurav13/rl](https://cloud.docker.com/repository/docker/ashishgaurav13/rl)
 
 * Ubuntu 18.04
@@ -18,8 +28,3 @@ Then
 ```
 $ docker run -t -e DISPLAY --net=host ashishgaurav13/rl glxgears
 ```
-
-#### Notes
-
-* For GPU work, install nvidia-docker for your Linux distribution
-* Also alias `dockergl="nvidia-docker run -ti --rm -e DISPLAY --net=host"`

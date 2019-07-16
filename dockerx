@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+
+import argparse, configparser
+import shutil
+import os, sys, glob
+
+def binary_exists(x):
+    return "installed" if shutil.which(x) is not None else "not installed"
+
+if not os.path.exists(os.path.expanduser("~")+"/.dockerxrc"):
+    config = configparser.ConfigParser()
+    config['args'] = {}
+    config['volumes'] = {}
+    config['defaults'] = {}
+    # Runs with -gpu
+    config['args']['gpu'] = 'yes'
+    # Runs with -x
+    config['args']['x'] = 'yes'
+    # Runs with -v $(pwd)/logs:/logs
+    config['volumes']['log'] = 'yes'
+    # Default options
+    config['defaults']['cmds'] = ''
+    # Write
+    config_file = os.path.expanduser("~")+"/.dockerxrc"
+    f = open(config_file, 'w')
+    config.write(f)
+    f.close()
+else:
+    # Read
+    config_file = os.path.expanduser("~")+"/.dockerxrc"
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-check', action='store_true', help="Checks requirements")
+parser.add_argument('-gpu', default=True if config['args']['gpu'] == 'yes' else False, action='store_true', help="Runs in GPU mode")
+parser.add_argument('-x', default=True if config['args']['x'] == 'yes' else False, action='store_true',
+    help="Allows X11 rendering; runs docker with privileges")
+parser.add_argument('-c', type=str, default='', help="Pass cmds file")
+parser.add_argument('-show', action='store_true', help="Must be used with -c")
+args, unknown = parser.parse_known_args()
+
+config2 = None
+if config['defaults']['cmds'] != '' or args.c != '':
+    config2 = configparser.ConfigParser()
+    if args.c != '':
+        config2.read(args.c)
+    else:
+        config2.read(config['defaults']['cmds'])
+    assert(len(config2.sections()) == 1)
+
+if args.check:
+    print('docker ... %s' % binary_exists('docker'))
+    print('nvidia-docker ... %s' % binary_exists('nvidia-docker'))
+    print('\n\nConfig (%s):' % config_file)
+    print('GPU ... %s' % config['args']['gpu'])
+    print('X ... %s' % config['args']['x'])
+    print('Volume mount logs dir ... %s' % config['volumes']['log'])
+    print('Default container cmds ... %s' % config['defaults']['cmds'])
+    exit(0)
+
+
+CMD = []
+if args.gpu:
+    CMD += ["nvidia-docker", "run"]
+else:
+    CMD += ["docker", "run"]
+
+if args.x:
+    CMD += ["--privileged", "-v", "/tmp/.X11-unix:/tmp/.X11-unix", "-ti", "--rm", "-e", "DISPLAY", "--net=host"]
+else:
+    CMD += ["-ti", "--rm"]
+
+if config['volumes']['log'] == 'yes':
+    CMD += ["-v", "$(pwd)/logs:/logs"]
+
+if config2:
+    cname = config2.sections()[0]
+    if args.show:
+        print('Container name: %s' % cname)
+        print('Shell CMD: %s' % ' '.join(CMD))
+        print('\n\nAvailable commands:')
+        for key in config2[cname].keys():
+            print('%s: %s' % (key, config2[cname][key]))
+    else:
+        CMD += config2.sections()
+        if len(unknown) == 1 and unknown[0] in config2[cname].keys():
+            CMD += [config2[cname][unknown[0]]]
+        else:
+            CMD += unknown
+        CMD = ' '.join(CMD)
+        os.system(CMD)
+else:
+    print('No config loaded.')
